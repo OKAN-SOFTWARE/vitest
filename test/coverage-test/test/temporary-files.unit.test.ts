@@ -83,13 +83,39 @@ test('clean() reclaims a stale lock left by a process that no longer exists', as
   await provider.cleanAfterRun()
 })
 
+test('terminal cleanup releases a lock held by the current process', async () => {
+  const { provider, lockFile, terminalCleanup } = createProvider()
+
+  await provider.clean(true)
+  expect(existsSync(lockFile)).toBe(true)
+
+  terminalCleanup()
+
+  expect(existsSync(lockFile)).toBe(false)
+})
+
+test('terminal cleanup preserves a lock owned by another process', async () => {
+  const { provider, lockFile, reportsDirectory, terminalCleanup } = createProvider()
+
+  await provider.clean(true)
+  writeFileSync(lockFile, JSON.stringify({ pid: process.pid + 1, reportsDirectory }))
+
+  terminalCleanup()
+
+  expect(existsSync(lockFile)).toBe(true)
+})
+
 function createProvider() {
   const reportsDirectory = mkdtempSync(join(tmpdir(), 'vitest-coverage-reports-'))
   onTestFinished(() => rmSync(reportsDirectory, { recursive: true, force: true }))
 
   const provider = new BaseCoverageProvider()
+  let terminalCleanup!: () => void
   provider._initialize({
-    logger: { warn: () => {} },
+    logger: {
+      warn: () => {},
+      onTerminalCleanup: (listener: () => void) => { terminalCleanup = listener },
+    },
     config: { root: process.cwd() },
     _coverageOptions: { reportsDirectory },
   } as any)
@@ -97,5 +123,5 @@ function createProvider() {
   const lockFile = provider['reportsDirectoryLock'].lockFile
   onTestFinished(() => rmSync(lockFile, { force: true }))
 
-  return { provider, reportsDirectory, lockFile }
+  return { provider, reportsDirectory, lockFile, terminalCleanup }
 }

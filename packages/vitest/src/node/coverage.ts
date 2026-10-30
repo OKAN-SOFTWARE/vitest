@@ -13,7 +13,7 @@ import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import { createHash } from 'node:crypto'
-import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, promises as fs, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -141,6 +141,7 @@ export class BaseCoverageProvider {
       this.ctx.config.shard,
     )
     this.reportsDirectoryLock = new ReportsDirectoryLock(resolve(this.options.reportsDirectory))
+    ctx.logger.onTerminalCleanup(() => this.reportsDirectoryLock.releaseSync())
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length
@@ -1016,6 +1017,17 @@ class ReportsDirectoryLock {
 
     if (owner?.pid === process.pid) {
       await fs.rm(this.lockFile, { force: true })
+    }
+  }
+
+  releaseSync(): void {
+    try {
+      const owner = JSON.parse(readFileSync(this.lockFile, 'utf-8')) as LockOwner
+      if (owner?.pid === process.pid) {
+        rmSync(this.lockFile, { force: true })
+      }
+    } catch {
+      // Process shutdown cleanup must not throw.
     }
   }
 

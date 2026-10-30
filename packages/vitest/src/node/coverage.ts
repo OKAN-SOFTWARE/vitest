@@ -13,7 +13,14 @@ import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import { createHash } from 'node:crypto'
-import { existsSync, promises as fs, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  promises as fs,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import module from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'

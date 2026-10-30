@@ -114,7 +114,9 @@ function createProvider() {
   provider._initialize({
     logger: {
       warn: () => {},
-      onTerminalCleanup: (listener: () => void) => { terminalCleanup = listener },
+      onTerminalCleanup: (listener: () => void) => {
+        terminalCleanup = listener
+      },
     },
     config: { root: process.cwd() },
     _coverageOptions: { reportsDirectory },

@@ -221,7 +221,7 @@ test('per-file autoUpdate uses the lowest file and skips globs with no matched f
 
     provider._initialize({
       config: { coverage: {} },
-      logger: { log: () => {} },
+      logger: { log: () => {}, onTerminalCleanup: () => {} },
       _coverageOptions: {},
     } as any)
 
@@ -301,7 +301,7 @@ async function updateThresholds(
 
     provider._initialize({
       config: { coverage: {} },
-      logger: { log: () => {} },
+      logger: { log: () => {}, onTerminalCleanup: () => {} },
       _coverageOptions,
     } as any)
 
